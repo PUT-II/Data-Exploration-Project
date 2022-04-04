@@ -95,12 +95,25 @@ def detect_text(url: str):
                                 swapRB=True,
                                 crop=False)
     net.setInput(blob)
-    scores, _ = net.forward([
+    scores, geometry = net.forward([
         "feature_fusion/Conv_7/Sigmoid",
         "feature_fusion/concat_3"
     ])
 
-    return url, np.max(scores[0, 0]) >= 0.8
+    result_mask = scores[0, 0] >= 8
+    has_text = np.any(result_mask)
+    if not has_text:
+        return url, (has_text, 0, 0)
+
+    xData0 = geometry[0, 0, result_mask]
+    xData1 = geometry[0, 1, result_mask]
+    xData2 = geometry[0, 2, result_mask]
+    xData3 = geometry[0, 3, result_mask]
+    largest_text_to_image_area_ratio = np.max((xData0 + xData2) * (xData1 + xData3)) / (image.width * image.height)
+
+    text_count = len(scores[0, 0, result_mask])
+
+    return url, (has_text, text_count, largest_text_to_image_area_ratio)
 
 
 def __file_path_from_url(url: str):
