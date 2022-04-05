@@ -5,8 +5,8 @@ numpy==1.21.5
 matplotlib==3.5.1
 nltk
 scikit-learn
-tensorflow==2.4.0
-imageai
+tensorflow-gpu==2.7.1
+imageai==2.1.6
 opencv-python==4.5.2.54
 requests
 pillow==9.0.1
