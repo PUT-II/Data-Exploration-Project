@@ -2,12 +2,13 @@ pandas
 jupyter
 seaborn
 numpy==1.21.5
-matplotlib==3.5.1
+matplotlib==3.5.0
 nltk
 scikit-learn
 tensorflow-gpu==2.7.1
 imageai==2.1.6
-opencv-python==4.5.2.54
-requests
+opencv-python==4.5.5.62
+requests~=2.27.1
 pillow==9.0.1
-tqdm==4.63.1
+tqdm==4.64.0
+deepface==0.0.74
