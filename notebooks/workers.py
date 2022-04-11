@@ -27,7 +27,7 @@ __race_map = {
 
 
 def download_and_save(url: str):
-    file_path = __file_path_from_url(url)
+    file_path = file_path_from_url(url)
     if os.path.exists(file_path):
         return
 
@@ -37,7 +37,7 @@ def download_and_save(url: str):
 
 
 def extract_color_features(url: str):
-    file_path = __file_path_from_url(url)
+    file_path = file_path_from_url(url)
 
     image = Image.open(file_path)
     image_array = np.array(image)
@@ -73,7 +73,7 @@ def extract_color_features(url: str):
 
 
 def extract_face_features(url: str):
-    file_path = __file_path_from_url(url)
+    file_path = file_path_from_url(url)
     image_arr = cv.imread(file_path)
 
     try:
@@ -131,7 +131,7 @@ def extract_face_features(url: str):
 
 
 def detect_text(url: str):
-    file_path = __file_path_from_url(url)
+    file_path = file_path_from_url(url)
     image = Image.open(file_path)
     image_array = cv.cvtColor(np.array(image), cv.COLOR_RGB2BGR)
 
@@ -175,6 +175,10 @@ def detect_text(url: str):
     return url, (has_text, text_count, largest_text_to_image_area_ratio)
 
 
+def file_path_from_url(url: str):
+    return f'./images/{url.split("/")[-2]}.jpg'
+
+
 def __calculate_image_colorfulness(image):
     """
     https://pyimagesearch.com/2017/06/05/computing-image-colorfulness-with-opencv-and-python/
@@ -193,10 +197,6 @@ def __calculate_image_colorfulness(image):
     meanRoot = np.sqrt((rbMean ** 2) + (ybMean ** 2))
     # derive the "colorfulness" metric and return it
     return stdRoot + (0.3 * meanRoot)
-
-
-def __file_path_from_url(url: str):
-    return f'./images/{url.split("/")[-2]}.jpg'
 
 
 def __crop_image(img, tol=0):
