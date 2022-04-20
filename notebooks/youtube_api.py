@@ -21,10 +21,13 @@ def download_video_categories(video_ids: List[str]) -> dict:
     return category_ids
 
 
-def download_youtube_data(start_date: datetime):
+def download_youtube_data(start_date: datetime, end_date: datetime):
     youtube_client = __create_youtube_api_client()
 
+    # TODO: Check if trending
+    # TODO: Use date range from trending dataframe
     # TODO: Add date loop
+    # TODO: Don't download videos randomly
     # TODO: Save done dates to a file
     date = start_date
     while date <= datetime.today():
@@ -63,15 +66,13 @@ def __download_video_ids(
 def __search(
         youtube_client,
         date_after: str = '2022-04-10T00:00:00Z',
-        page_token: str = '',
-        id_: str = ''
+        page_token: str = ''
 ) -> dict:
     request = youtube_client.search().list(
         type='video',
         part='snippet',
         regionCode='US',
         publishedAfter=date_after,
-        id=id_,
         pageToken=page_token,
         maxResults=50
     )
