@@ -21,16 +21,25 @@ def download_video_categories(video_ids: List[str]) -> dict:
     return category_ids
 
 
-def download_youtube_data(start_date: datetime, end_date: datetime):
+def download_youtube_data(
+        start_date: datetime,
+        end_date: datetime,
+        view_count_threshold: int,
+        excluded_ids: set = None
+):
+    if excluded_ids is None:
+        excluded_ids = set()
+
     youtube_client = __create_youtube_api_client()
 
-    # TODO: Check if trending
+    # TODO: Check if trending (excluded_ids)
     # TODO: Use date range from trending dataframe
     # TODO: Add date loop
-    # TODO: Don't download videos randomly
     # TODO: Save done dates to a file
     date = start_date
     while date <= datetime.today():
+        # TODO: Sort videos by view_count
+        # TODO: Use view_count_threshold to limit videos
         video_ids, next_page_token = __download_video_ids(youtube_client)
         # TODO: Save vide_ids to file
         while next_page_token:
