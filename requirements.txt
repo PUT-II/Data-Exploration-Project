@@ -1,7 +1,7 @@
 pandas
 jupyter
 seaborn
-numpy==1.21.5
+numpy~=1.19.3
 matplotlib==3.5.0
 nltk
 scikit-learn
@@ -9,8 +9,9 @@ tensorflow-gpu==2.7.1
 imageai==2.1.6
 opencv-python==4.5.5.62
 requests~=2.27.1
-pillow==9.0.1
+pillow~=9.0.0
 tqdm==4.64.0
 deepface==0.0.74
 google-api-python-client==2.43.0
 imbalanced-learn
+featurewiz
