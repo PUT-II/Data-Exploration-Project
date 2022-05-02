@@ -6,8 +6,8 @@ numpy
 matplotlib
 nltk
 scikit-learn
-imageai
-tensorflow-gpu==2.7.1
+imageai==2.1.6
+tensorflow-gpu==2.4.4
 opencv-python
 requests
 pillow
