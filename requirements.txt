@@ -8,6 +8,7 @@ nltk
 scikit-learn
 imageai==2.1.6
 tensorflow-gpu==2.4.4
+tensorflow==2.4.4
 opencv-python
 requests
 pillow
