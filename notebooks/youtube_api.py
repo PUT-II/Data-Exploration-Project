@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Tuple, List
 
 import googleapiclient.discovery
-from tqdm.notebook import tqdm
+import tqdm
 
 __DEVELOPER_KEY = 'AIzaSyAlL6yvd0YkA3Co-QA8AbUt7buW3Y0RnGg'
 
@@ -13,7 +13,7 @@ def download_video_categories(video_ids: List[str]) -> dict:
     video_ids_chunks = list(__make_chunks(video_ids, 50))
 
     category_ids = {}
-    for chunk in tqdm(video_ids_chunks):
+    for chunk in tqdm.tqdm(video_ids_chunks):
         videos_result = __download_videos(youtube_client, ids=chunk, part='snippet')
         for item in videos_result['items']:
             category_ids[item['id']] = item['snippet']['categoryId']
