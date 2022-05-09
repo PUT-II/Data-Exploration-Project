@@ -1,10 +1,16 @@
-from datetime import datetime
-from typing import Tuple, List
+import datetime as dt
+import json
+from typing import Tuple, List, Union
 
 import googleapiclient.discovery
 import tqdm
+from googleapiclient.errors import HttpError
 
-__DEVELOPER_KEY = 'AIzaSyAlL6yvd0YkA3Co-QA8AbUt7buW3Y0RnGg'
+API_KEYS = {
+    "API_KEY_1": True,
+    "API_KEY_2": True
+}
+api_key = ""
 
 
 def download_video_categories(video_ids: List[str]) -> dict:
@@ -21,72 +27,78 @@ def download_video_categories(video_ids: List[str]) -> dict:
     return category_ids
 
 
-def download_youtube_data(
-        start_date: datetime,
-        end_date: datetime,
-        view_count_threshold: int,
-        excluded_ids: set = None
-):
+def download_non_trending_video_ids(
+        date: dt.datetime,
+        video_count: int,
+        excluded_ids: Union[list, set] = None
+) -> List[Tuple[str, dt.datetime]]:
     if excluded_ids is None:
         excluded_ids = set()
 
+    if type(excluded_ids) is list:
+        excluded_ids = set(excluded_ids)
+
     youtube_client = __create_youtube_api_client()
 
-    # TODO: Check if trending (excluded_ids)
-    # TODO: Use date range from trending dataframe
-    # TODO: Add date loop
-    # TODO: Save done dates to a file
-    date = start_date
-    while date <= datetime.today():
-        # TODO: Sort videos by view_count
-        # TODO: Use view_count_threshold to limit videos
-        video_ids, next_page_token = __download_video_ids(youtube_client)
-        # TODO: Save vide_ids to file
-        while next_page_token:
-            video_ids_next, next_page_token = __download_video_ids(youtube_client)
-            video_ids.extend(video_ids_next)
+    video_ids = []
+    next_page_token = ''
+    while len(video_ids) < video_count:
+        while True:
+            try:
+                video_ids_next, next_page_token = __download_video_ids(youtube_client, date, next_page_token)
+                video_ids.extend(video_ids_next)
+                video_ids = [video_id for video_id in video_ids if video_id[0] not in excluded_ids]
+                break
+            except HttpError:
+                API_KEYS[api_key] = False
+                youtube_client = __create_youtube_api_client()
+        if not next_page_token:
+            break
 
-            # TODO: Save vide_ids to file
+    return video_ids
 
-    # TODO: Download video details
-    # TODO: Save remaining video ids to a file
+
+def download_video_details():
+    # TODO: Implement
+    pass
 
 
 def __create_youtube_api_client():
+    global api_key
+
     # API information
     api_service_name = 'youtube'
     api_version = 'v3'
+    try:
+        api_key = [key for key in API_KEYS if API_KEYS[key]][0]
+    except IndexError:
+        raise IndexError("Daily quota exceeded for all api keys")
 
-    youtube_client = googleapiclient.discovery.build(api_service_name, api_version, developerKey=__DEVELOPER_KEY)
+    youtube_client = googleapiclient.discovery.build(api_service_name, api_version, developerKey=api_key)
     return youtube_client
 
 
 def __download_video_ids(
         youtube_client,
-        date_after: str = '2022-04-10T00:00:00Z',
+        date: dt.datetime,
         page_token: str = '',
-) -> Tuple[list, str]:
-    search_result: dict = __search(youtube_client, date_after=date_after, page_token=page_token)
-    video_ids = [item['id']['videoId'] for item in search_result['items']]
-
-    return video_ids, search_result.get('nextPageToken', default='')
-
-
-def __search(
-        youtube_client,
-        date_after: str = '2022-04-10T00:00:00Z',
-        page_token: str = ''
-) -> dict:
+) -> Tuple[List[Tuple[str, dt.datetime]], str]:
     request = youtube_client.search().list(
         type='video',
         part='snippet',
         regionCode='US',
-        publishedAfter=date_after,
+        order="viewCount",
+        publishedAfter=__iso_format(date),
+        publishedBefore=__iso_format(date + dt.timedelta(days=1)),
         pageToken=page_token,
         maxResults=50
     )
     search_result: dict = request.execute()
-    return search_result
+    print(json.dumps(search_result))
+    video_ids = [(item['id']['videoId'], __iso_parse(item['snippet']['publishedAt'])) for item in
+                 search_result['items']]
+
+    return video_ids, search_result.get('nextPageToken', '')
 
 
 def __download_videos(
@@ -112,3 +124,11 @@ def __download_videos(
 def __make_chunks(list_, n):
     for i in range(0, len(list_), n):
         yield list_[i:i + n]
+
+
+def __iso_parse(date_str: str) -> dt.datetime:
+    return dt.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
+
+
+def __iso_format(date: dt.datetime) -> str:
+    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
