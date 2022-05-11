@@ -3,13 +3,12 @@ import json
 from typing import Tuple, List, Union
 
 import googleapiclient.discovery
+import pandas as pd
 import tqdm
 from googleapiclient.errors import HttpError
 
-API_KEYS = {
-    "API_KEY_1": True,
-    "API_KEY_2": True
-}
+with open("data/api-keys.json", mode="r") as file:
+    API_KEYS = {api_key: True for api_key in json.loads(file.read())}
 api_key = ""
 
 
@@ -58,9 +57,62 @@ def download_non_trending_video_ids(
     return video_ids
 
 
-def download_video_details():
-    # TODO: Implement
-    pass
+def download_video_details(video_ids: List[str]) -> pd.DataFrame:
+    result_df = pd.DataFrame(
+        columns=["video_id",
+                 "title",
+                 "publishedAt",
+                 "categoryId",
+                 "tags",
+                 "view_count",
+                 "likes",
+                 "comment_count",
+                 "thumbnail_link",
+                 "comments_disabled",
+                 "ratings_disabled",
+                 "description"])
+
+    if not video_ids:
+        return result_df
+
+    youtube_client = __create_youtube_api_client()
+
+    video_ids_chunks = list(__make_chunks(video_ids, 50))
+
+    videos = []
+    try:
+        for chunk in tqdm.tqdm(video_ids_chunks):
+            while True:
+                try:
+                    videos_result = __download_videos(youtube_client, ids=chunk)
+
+                    for i, item in enumerate(videos_result['items']):
+                        snippet = item['snippet']
+                        statistics = item['statistics']
+
+                        videos.append({
+                            "video_id": chunk[i],
+                            "title": snippet['title'],
+                            "publishedAt": snippet['publishedAt'],
+                            "categoryId": snippet['channelId'],
+                            "tags": "|".join(snippet["tags"]),
+                            "view_count": statistics.get('viewCount', 0),
+                            "likes": statistics['likeCount'],
+                            "comment_count": statistics['commentCount'],
+                            "thumbnail_link": snippet["thumbnails"]["high"]["url"],
+                            "comments_disabled": statistics['commentCount'] == 0,
+                            "ratings_disabled": statistics['likeCount'] == 0,
+                            "description": snippet["description"]
+                        })
+                    break
+                except HttpError:
+                    API_KEYS[api_key] = False
+                    youtube_client = __create_youtube_api_client()
+    except Exception as e:
+        print(e)
+
+    result_df = result_df.append(videos, ignore_index=True)
+    return result_df
 
 
 def __create_youtube_api_client():
@@ -94,7 +146,6 @@ def __download_video_ids(
         maxResults=50
     )
     search_result: dict = request.execute()
-    print(json.dumps(search_result))
     video_ids = [(item['id']['videoId'], __iso_parse(item['snippet']['publishedAt'])) for item in
                  search_result['items']]
 
@@ -103,7 +154,6 @@ def __download_video_ids(
 
 def __download_videos(
         youtube_client,
-        page_token: str = '',
         ids=None,
         part: str = 'snippet,statistics'
 ) -> dict:
@@ -113,9 +163,7 @@ def __download_videos(
     request = youtube_client.videos().list(
         part=part,
         regionCode='US',
-        id=','.join(ids),
-        pageToken=page_token,
-        maxResults=50
+        id=','.join(ids)
     )
     search_result: dict = request.execute()
     return search_result
