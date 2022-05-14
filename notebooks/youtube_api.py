@@ -94,8 +94,8 @@ def download_video_details(video_ids: List[str]) -> pd.DataFrame:
                             "video_id": chunk[i],
                             "title": snippet['title'],
                             "publishedAt": snippet['publishedAt'],
-                            "categoryId": snippet['channelId'],
-                            "tags": "|".join(snippet["tags"]),
+                            "categoryId": snippet['categoryId'],
+                            "tags": "|".join(snippet.get("tags", [])),
                             "view_count": statistics.get('viewCount', 0),
                             "likes": statistics['likeCount'],
                             "comment_count": statistics['commentCount'],
@@ -109,7 +109,8 @@ def download_video_details(video_ids: List[str]) -> pd.DataFrame:
                     API_KEYS[api_key] = False
                     youtube_client = __create_youtube_api_client()
     except Exception as e:
-        print(e)
+        if len(videos) == 0:
+            raise e
 
     result_df = result_df.append(videos, ignore_index=True)
     return result_df
@@ -143,7 +144,7 @@ def __download_video_ids(
         publishedAfter=__iso_format(date),
         publishedBefore=__iso_format(date + dt.timedelta(days=1)),
         pageToken=page_token,
-        maxResults=50
+        maxResults=50,
     )
     search_result: dict = request.execute()
     video_ids = [(item['id']['videoId'], __iso_parse(item['snippet']['publishedAt'])) for item in

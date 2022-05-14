@@ -6,7 +6,7 @@ import requests
 from PIL import Image
 from deepface import DeepFace
 
-__emotion_map = {
+emotion_map = {
     'angry': 1,
     'disgust': 2,
     'fear': 3,
@@ -16,7 +16,7 @@ __emotion_map = {
     'neutral': 7,
 }
 
-__race_map = {
+race_map = {
     'asian': 1,
     'indian': 2,
     'black': 3,
@@ -115,7 +115,7 @@ def extract_face_features(url: str):
         'thumbnail_face_emotion_sad': result['emotion']['sad'],
         'thumbnail_face_emotion_surprise': result['emotion']['surprise'],
         'thumbnail_face_emotion_neutral': result['emotion']['neutral'],
-        'thumbnail_face_dominant_emotion': __emotion_map[result['dominant_emotion']],
+        'thumbnail_face_dominant_emotion': emotion_map[result['dominant_emotion']],
         'thumbnail_face_age': result['age'],
         'thumbnail_face_race_asian': result['race']['asian'],
         'thumbnail_face_race_indian': result['race']['indian'],
@@ -123,7 +123,7 @@ def extract_face_features(url: str):
         'thumbnail_face_race_white': result['race']['white'],
         'thumbnail_face_race_middle_eastern': result['race']['middle eastern'],
         'thumbnail_face_race_latino_hispanic': result['race']['latino hispanic'],
-        'thumbnail_face_dominant_race': __race_map[result['dominant_race']],
+        'thumbnail_face_dominant_race': race_map[result['dominant_race']],
         'thumbnail_face_gender': 1 if result['gender'] == 'Man' else 2
     }
 
