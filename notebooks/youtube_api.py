@@ -97,11 +97,11 @@ def download_video_details(video_ids: List[str]) -> pd.DataFrame:
                             "categoryId": snippet['categoryId'],
                             "tags": "|".join(snippet.get("tags", [])),
                             "view_count": statistics.get('viewCount', 0),
-                            "likes": statistics['likeCount'],
-                            "comment_count": statistics['commentCount'],
+                            "likes": statistics.get('likeCount', 0),
+                            "comment_count": statistics.get('commentCount', 0),
                             "thumbnail_link": snippet["thumbnails"]["high"]["url"],
-                            "comments_disabled": statistics['commentCount'] == 0,
-                            "ratings_disabled": statistics['likeCount'] == 0,
+                            "comments_disabled": statistics.get('commentCount', 0) == 0,
+                            "ratings_disabled": statistics.get('likeCount', 0) == 0,
                             "description": snippet["description"]
                         })
                     break
